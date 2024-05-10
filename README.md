@@ -61,3 +61,60 @@ Informasi mengenai alamat email dari user yang sedang login bisa diakses dari $u
 dimana variabel $user berasal dari penulisan argument method create() di baris 5.
 Syarat berikutnya, kita harus tambahkan perintah khusus ke dalam method store() di
 JurusanController:
+
+Proses input jurusan berhasil! Karena alamat email 'admin@gmail,com' sesuai dengan syarat di
+method create(). Inilah cara kerja dari Laravel Policy.
+Syarat policy ini juga sangat fleksibel, tidak harus email tapi juga bisa menggunakan data lain
+untuk proses identifikasi user. Misalnya bisa saya menulis syarat seperti ini:
+public function create(User $user)
+{
+ return $user->name === 'Admin';
+}
+Kode ini akan mengizinkan user dengan name 'Admin' untuk melakukan input data. Tapi hatihati karena secara bawaan kolom name di tabel users bawaan Laravel tidak di set dengan
+atribut unique. Sehingga bisa saja terdapat lebih dari 1 user bernama 'Admin' dan siapa saja bisa
+mendaftarkan diri dengan nama 'Admin'.
+Bagaimana jika kita ingin ada 2 user yang diberi hak akses? Tidak masalah, yang perlu diubah
+hanya di logika pemeriksaan user.
+Perhatikan contoh berikut:
+public function create(User $user)
+{
+return ($user->email === 'admin@gmail.com')
+ OR ($user->email === 'support@gmail.com');
+}
+Di sini saya menggabung 2 buah operasi perbandingan dengan operator OR, sehingga user
+dengan email admin@gmail.com dan support@gmail.com akan bisa melakukan proses input
+data.
+Agar lebih rapi, logika di atas juga bisa juga ditulis menggunakan fungsi in_array():
+
+
+# Membatasi Tampilan di View
+Saat ini proses input data hanya bisa dilakukan oleh user admin. Namun di dalam view, menu
+dan tombol "Tambah Jurusan" tetap tampil untuk semua user. Idealnya, tombol tersebut
+hanya bisa dilihat untuk user admin saja, atau lebih baik lagi hanya bisa dilihat oleh user yang
+memiliki hak akses untuk menambah data.
+
+
+Blade memiliki fitur khusus untuk keperluan tersebut, yakni perintah @can dan @cannot serta
+pasangan penutup @endcan dan @endcannot. Perintah @can dan @cannot butuh 2 argument
+yang sama seperti method $this->authorize() di controller. Berikut contoh penggunaannya:
+
+
+@can('create', App\Models\Jurusan::class)
+    <p>Hanya bisa dilihat oleh user yang bisa men-create jurusan</p>
+ @endcan
+
+Dengan penulisan ini, kode HTML di baris 2 hanya bisa dilihat oleh user yang memiliki hak
+akses untuk melakukan proses create ke dalam tabel jurusan. Perhatikan penulisan argument
+'create' dan App\Models\Jurusan::class untuk perintah @can. Ini sama seperti yang kita pakai
+di dalam method $this->authorize().
+
+Sebaliknya, perintah @cannot hanya bisa dilihat oleh user yang tidak memiliki hak akses:
+@cannot('create', App\Models\Jurusan::class)
+     <p>Hanya bisa dilihat oleh user yang tidak bisa men-create jurusan</p>
+ @endcan
+
+
+Sekarang kode HTML di baris 2 hanya boleh dilihat oleh user yang tidak bisa melakukan
+proses create ke dalam tabel jurusan.
+Dalam praktek kita, terdapat 2 komponen yang memiliki link ke form tambah jurusan, yakni
+menu navbar dan tombol di sisi kanan atas. Untuk menu navbar, kode programnya ada di view 
