@@ -24,3 +24,4 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 Route::get('/', [JurusanController::class,'index'])->middleware('auth');
 Route::resource('jurusans',JurusanController::class)->middleware('auth');
+Route::get('jurusans/{jurusan}',[JurusanController::class,'show'])->name('jurusans.show')->middleware('auth')->middleware('can:view,jurusan');

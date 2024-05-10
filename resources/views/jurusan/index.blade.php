@@ -43,9 +43,17 @@
                         <tr>
                             <th>{{$loop->iteration}}</th>
                                 <td>
+                                    @can('view', $jurusan)
                                     <a href="{{ url('/jurusans/'.$jurusan->id) }}">
                                     {{$jurusan->nama_jurusan}}
-                                </a>
+                                    </a>
+                                @endcan
+
+                                @cannot('view', $jurusan)
+                                    {{-- <a href="{{ url('/jurusans/'.$jurusan->id) }}"> --}}
+                                        {{$jurusan->nama_jurusan}}
+                                    {{-- </a> --}}
+                                @endcannot
                                 </td>
                                 <td>{{$jurusan->nama_dekan}}</td>
                                 <td>{{$jurusan->jumlah_mahasiswa}}</td>

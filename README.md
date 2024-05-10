@@ -118,3 +118,87 @@ Sekarang kode HTML di baris 2 hanya boleh dilihat oleh user yang tidak bisa mela
 proses create ke dalam tabel jurusan.
 Dalam praktek kita, terdapat 2 komponen yang memiliki link ke form tambah jurusan, yakni
 menu navbar dan tombol di sisi kanan atas. Untuk menu navbar, kode programnya ada di view 
+
+
+# Membatasi Proses Delete
+
+Percobaan selanjutnya adalah membatasi proses delete. Di dalam JurusanController, method
+yang bertindak untuk proses delete adalah destroy(). Berdasarkan tabel pasangan method
+sebelumnya, method destroy() di Controller berpasangan dengan method delete() di Policy.
+
+        return in_array($user->email, [
+            'admin@gmail.com',
+           'support@gmail.com',
+        ]);
+
+
+ngan kode ini, maka hanya user dengan email admin@gmail.com saja yang bisa melakukan
+proses delete. Berikutnya, kita harus daftarkan batasan hak akses ke method destroy() di
+JurusanController.php:
+
+Ada sedikit perubahan di perintah $this->authorize(), sekarang penulisan argument kedua
+tidak lagi Jurusan::class, tapi cukup variabel $jurusan. Ini karena di dalam method destroy()
+kita sudah memiliki akses ke Jurusan model yang berasal dari penulisan argument di baris 3,
+sedangkan di method create() sebelumnya, variabel ini masih belum tersedia.
+Mari coba pembatasan ini. Dengan user rissa, proses penghapusan akan ditolak:
+
+
+
+Sip, pembatasan hak akses delete sudah berhasil. Sekarang, bagaimana cara menyembunyikan
+tombol Hapus ini? Sama seperti sebelumnya, kita harus cari view tempat tombol tersebut
+dibuat, lalu pindahkan ke dalam blok @can:
+
+
+Jurusan::class. Ini karena di dalam view show.blade.php, kita juga sudah bisa mengakses
+variabel $jurusan yang berisi Jurusan. Variabel $jurusan ini yang berasal dari method show()
+di JurusanController, yakni method yang dipakai untuk membuka view show.blade.php.
+
+
+# Pembatasan di Route
+Sampai di sini kita sudah membatasi 2 buah RESTfull method, yakni proses create dan delete.
+Caranya adalah dengan menulis syarat pembatasan di policy, kemudian menerapkannya ke
+dalam method controller.
+Selain di tulis ke dalam method controller, penerapan batasan policy ini juga bisa dilakukan
+dari route menggunakan "bantuan" middleware.
+
+membatasi akses ke tampilan 1 data tabel yang ditangani
+oleh method view():
+
+
+Method view() ini berpasangan dengan method show() di JurusanController, yakni method
+yang dipakai untuk melihat 1 data detail seperti localhost:8000/jurusans/1,
+localhost:8000/jurusans/2, dst. Alamat inilah yang ingin kita batasi.
+
+        return in_array($user->email,[
+            'admin@gmail.com'
+        ]);
+
+        yt
+Jika memakai cara sebelumnya, tinggal tambah perintah $this->authorize('view',$jurusan)
+ke dalam method show() di JurusanController. Namun kali ini saya ingin pakai cara alternatif
+dengan menulisnya di route.
+
+Caranya adalah, men-chaning pemanggilan method berikut ke dalam route
+
+->middleware('can:<nama_method_policy>,<class_model_yang_dibatasi>')
+
+Method ini harus ditulis ke dalam route yang sesuai dengan method policy. Dalam contoh kita,
+method view() di JurusanPolicy dipakai untuk membatasi hak akses method show() di
+JurusanController, maka penulisan route-nya menjadi:
+Route::get('jurusans/{jurusan}',[JurusanController::class,'show'])
+->name('jurusans.show')->middleware('can:view,jurusan');
+
+
+
+
+Pembatasan policy di route merupakan cara alternatif selain menulis perintah $this-
+>authorize() ke dalam controller.
+Sedikit catatan, penulisan method chaining middleware('can:view,jurusan') tidak boleh
+berisi spasi, misalnya jika ditulis sebagai middleware('can:view, jurusan') maka policy tidak
+akan berjalan
+
+Blok kode program @can('view', $jurusan) hanya tampil untuk user yang memiliki hak
+akses view(). Jika ini dipenuhi, buat link ke url('/jurusans/'.$jurusan->id).
+Sedangkan blok perintah @cannot('view', $jurusan) hanya dipenuhi jika user tidak
+memiliki hak akses untuk view(). Untuk hal ini, cukup tampilkan teks nama jurusan
+tanpa tag <a>

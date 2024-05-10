@@ -10,11 +10,14 @@
                 <h2>Info Jurusan {{$jurusan->nama_jurusan}}</h2>
                 <div class="d-flex">
                     <a href="{{url('/jurusans/'.$jurusan->id.'/edit')}}" class="btn btn-primary">Edit</a>
-                    <form action="{{url('/jurusans/'.$jurusan->id)}}" method="POST">
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger ms-3">Hapus</button>
-                        @csrf
-                    </form>
+
+                    @can('delete', $jurusan)
+                        <form action="{{url('/jurusans/'.$jurusan->id)}}" method="POST">
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger ms-3">Hapus</button>
+                            @csrf
+                        </form>
+                    @endcan
                 </div>
             </div>
             <hr>

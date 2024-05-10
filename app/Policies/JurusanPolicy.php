@@ -22,6 +22,9 @@ class JurusanPolicy
     public function view(User $user, Jurusan $jurusan)
     {
         //
+        return in_array($user->email,[
+            'admin@gmail.com'
+        ]);
     }
 
     /**
@@ -51,6 +54,10 @@ class JurusanPolicy
     public function delete(User $user, Jurusan $jurusan)
     {
         //
+        return in_array($user->email, [
+            'admin@gmail.com',
+           'support@gmail.com',
+        ]);
     }
 
     /**
